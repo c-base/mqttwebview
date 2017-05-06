@@ -1,5 +1,5 @@
 #
-heavily based on github.com/c-base/mqttluakit
+heavily based on http://github.com/c-base/mqttluakit
 
 ## How to install
 
