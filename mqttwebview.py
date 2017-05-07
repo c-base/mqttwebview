@@ -8,6 +8,7 @@ import time
 import logging
 import json
 import paho.mqtt.client as paho
+import validators
 from random import choice
 from threading import Thread
 from datetime import datetime
@@ -57,26 +58,30 @@ def mqtt_loop():
             last_change = datetime.now()
 
 
-def on_message(m, obj, msg):
+def on_message(client, obj, msg):
     global last_change
     payload = msg.payload.decode('utf-8')
     try:
         url = json.loads(payload)
     except json.decoder.JSONDecodeError:
         url = payload
-    log.debug("Received message, opening %s" % url)    
     last_change = datetime.now()
-    webview.load_url(url)
+    if validators.url(url):
+        log.debug("Received message, opening %s" % url)
+        webview.load_url(url)
+        client.publish('%s/opened' % mqtt_client_name, url)
+    else:
+        log.warning("Malformed URL received: '%s'" % repr(url))
 
 
 def run_webview_window():
     # Will block here until window is closed.
     webview.create_window("It works, Jim!", "http://c-beam.cbrp3.c-base.org/he1display", fullscreen=True)
-    sys.exit(0)
+    sys.exit(1)
 
 
 def signal_handler(signal, frame):
-    print('You pressed Ctrl+C!')
+    log.info('You pressed Ctrl+C!')
     webview.destroy_window()
     sys.exit(0)
     
@@ -84,7 +89,7 @@ def signal_handler(signal, frame):
 def main():
     # Set up logging in a autorotation logfile in the same directory as this file.
     logfilename = os.path.realpath(os.path.join(os.path.dirname(__file__), 'debug.log'))
-    handler = RotatingFileHandler(logfilename, maxBytes=5242880, backupCount=5) 
+    handler = RotatingFileHandler(logfilename, maxBytes=5242880, backupCount=1) 
     format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     handler.setFormatter(format)
     log.addHandler(handler)
