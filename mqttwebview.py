@@ -65,12 +65,12 @@ def on_message(client, obj, msg):
         url = json.loads(payload)
     except:
         url = payload
-    if validators.url(url):
+    if validators.url(url.split("#", 1)[0]):
         log.debug("Received message, opening %s" % url)
         last_change = datetime.now()
         open_url(url, client)
     else:
-        log.warning("Malformed URL received: '%s'" % repr(url))
+        log.warning("Malformed URL received: %s" % repr(url))
 
 
 def open_url(url, client):
