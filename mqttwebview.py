@@ -54,7 +54,7 @@ def mqtt_loop():
             mqtt_connect(client)
         time.sleep(0.5)
         if datetime.now() > last_change + timedelta(seconds=page_timeout):
-            webview.load_url("%s" % choice(urls))
+            open_url("%s" % choice(urls), client)
             last_change = datetime.now()
 
 
@@ -63,16 +63,20 @@ def on_message(client, obj, msg):
     payload = msg.payload.decode('utf-8')
     try:
         url = json.loads(payload)
-    except json.decoder.JSONDecodeError:
+    except:
         url = payload
-    last_change = datetime.now()
     if validators.url(url):
         log.debug("Received message, opening %s" % url)
-        webview.load_url(url)
-        client.publish('%s/opened' % mqtt_client_name, url)
+        last_change = datetime.now()
+        open_url(url, client)
     else:
         log.warning("Malformed URL received: '%s'" % repr(url))
 
+
+def open_url(url, client):
+    webview.load_url(url)
+    client.publish('%s/opened' % mqtt_client_name, url)
+	
 
 def run_webview_window():
     # Will block here until window is closed.
