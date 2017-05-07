@@ -16,11 +16,11 @@ from datetime import timedelta
 from logging.handlers import RotatingFileHandler
 
 from config import urls
+from config import important_urls
 from config import mqtt_client_id
 from config import mqtt_client_name
 from config import mqtt_client_password
 import config
-
 mqtt_server = "c-beam.cbrp3.c-base.org"
 page_timeout = 120
 
@@ -28,8 +28,8 @@ last_change = datetime.now()
 
 log = logging.getLogger(__name__)
 
-important_cycle = cycle(config.important_urls)
-urls_cycle = cycle(config.urls)
+important_cycle = cycle(important_urls)
+urls_cycle = cycle(urls)
 
 # A cycle of cycles. Every <page_timeout> minutes the screen will show the next url from the cycle.
 # With a configuration like this
@@ -38,7 +38,7 @@ urls_cycle = cycle(config.urls)
 #       cycle([urls_cycle, important_cycle]
 # the result would look like this:
 #.      ['google.com', 'c-base.org', 'bing.com', 'c-base.org', 'google.com', ...]
-url_list_cycle = cycle([urls_cycle, important_cycle])
+url_list_cycle = cycle([important_cycle, urls_cycle])
 
 
 def mqtt_connect(client):
@@ -52,7 +52,7 @@ def mqtt_connect(client):
         client.subscribe("%s/open" % mqtt_client_name, 1) # level 1 means at least once
         client.on_message = on_message
     except Exception as e: 
-        log.debig(e)
+        log.debug(e)
 
 
 def mqtt_loop():
@@ -67,8 +67,8 @@ def mqtt_loop():
             mqtt_connect(client)
         time.sleep(0.5)
         if datetime.now() > last_change + timedelta(seconds=page_timeout):
-            current_cycle = url_list_cycle.next()
-            open_url("%s" % current_cycle.next(), client)
+            current_cycle = next(url_list_cycle)
+            open_url("%s" % next(current_cycle), client)
             last_change = datetime.now()
 
 
@@ -94,7 +94,8 @@ def open_url(url, client):
 
 def run_webview_window():
     # Will block here until window is closed.
-    webview.create_window("It works, Jim!", important_urls.next(), fullscreen=True)
+    current_cycle = next(url_list_cycle)
+    webview.create_window("It works, Jim!", next(current_cycle), fullscreen=True)
     sys.exit(1)
 
 
