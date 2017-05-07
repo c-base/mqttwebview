@@ -6,6 +6,7 @@ import sys
 import webview
 import time
 import logging
+import json
 import paho.mqtt.client as paho
 from random import choice
 from threading import Thread
@@ -58,7 +59,11 @@ def mqtt_loop():
 
 def on_message(m, obj, msg):
     global last_change
-    url = msg.payload.decode('utf-8')
+    payload = msg.payload.decode('utf-8')
+    try:
+        url = json.loads(payload)
+    except json.decoder.JSONDecodeError:
+        url = payload
     log.debug("Received message, opening %s" % url)    
     last_change = datetime.now()
     webview.load_url(url)
