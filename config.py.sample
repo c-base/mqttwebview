@@ -1,3 +1,7 @@
+important_urls = [
+    "http://c-beam.cbrp3.c-base.org/he1display",
+]
+
 urls = [
   "http://www.c-base.org",
   "http://logbuch.c-base.org/",

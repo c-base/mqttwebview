@@ -9,7 +9,7 @@ import logging
 import json
 import paho.mqtt.client as paho
 import validators
-from random import choice
+from itertools import cycle
 from threading import Thread
 from datetime import datetime
 from datetime import timedelta
@@ -27,6 +27,19 @@ page_timeout = 120
 last_change = datetime.now()
 
 log = logging.getLogger(__name__)
+
+important_cycle = cycle(config.important_urls)
+urls_cycle = cycle(config.urls)
+
+# A cycle of cycles. Every <page_timeout> minutes the screen will show the next url from the cycle.
+# With a configuration like this
+#       important_urls = ['c-base.org']
+#       urls = ['google.com', 'bing.com']
+#       cycle([urls_cycle, important_cycle]
+# the result would look like this:
+#.      ['google.com', 'c-base.org', 'bing.com', 'c-base.org', 'google.com', ...]
+url_list_cycle = cycle([urls_cycle, important_cycle])
+
 
 def mqtt_connect(client):
     try:
@@ -54,7 +67,8 @@ def mqtt_loop():
             mqtt_connect(client)
         time.sleep(0.5)
         if datetime.now() > last_change + timedelta(seconds=page_timeout):
-            open_url("%s" % choice(urls), client)
+            current_cycle = url_list_cycle.next()
+            open_url("%s" % current_cycle.next(), client)
             last_change = datetime.now()
 
 
@@ -80,7 +94,7 @@ def open_url(url, client):
 
 def run_webview_window():
     # Will block here until window is closed.
-    webview.create_window("It works, Jim!", "http://c-beam.cbrp3.c-base.org/he1display", fullscreen=True)
+    webview.create_window("It works, Jim!", important_urls.next(), fullscreen=True)
     sys.exit(1)
 
 
