@@ -1,0 +1,3 @@
+paho-mqtt==1.2.3
+pywebview==1.6
+pyobjc==3.2.1

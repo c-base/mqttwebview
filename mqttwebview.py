@@ -5,11 +5,13 @@ import os
 import sys
 import webview
 import time
+import logging
 import paho.mqtt.client as paho
 from random import choice
 from threading import Thread
 from datetime import datetime
 from datetime import timedelta
+from logging.handlers import RotatingFileHandler
 
 from config import urls
 from config import mqtt_client_id
@@ -22,23 +24,26 @@ page_timeout = 120
 
 last_change = datetime.now()
 
+log = logging.getLogger(__name__)
 
 def mqtt_connect(client):
     try:
         client.username_pw_set(mqtt_client_name, password=mqtt_client_password)
         if config.mqtt_server_tls:
-            print(client.tls_set(config.mqtt_server_cert, cert_reqs=ssl.CERT_OPTIONAL))
-            print(client.connect(mqtt_server, port=1884))
+            log.debug(client.tls_set(config.mqtt_server_cert, cert_reqs=ssl.CERT_OPTIONAL))
+            log.debug(client.connect(mqtt_server, port=1884))
         else:
-            print(client.connect(mqtt_server))
-        client.subscribe("+/+", 1)
+            log.debug(client.connect(mqtt_server))
+        client.subscribe("%s/open" % mqtt_client_name, 1) # level 1 means at least once
         client.on_message = on_message
     except Exception as e: 
-        print(e)
+        log.debig(e)
 
 
 def mqtt_loop():
     global last_change
+    time.sleep(5.0)
+    log.debug("MQTT loop started.")
     client = paho.Client(mqtt_client_id)
     mqtt_connect(client)
     while True:
@@ -53,35 +58,46 @@ def mqtt_loop():
 
 def on_message(m, obj, msg):
     global last_change
-    print("==> topic %s" % msg.topic)
-    if msg.topic == "%s/open" % mqtt_client_name:
-        print("===> opening")
-        last_change = datetime.now()
-        webview.load_url(msg.payload.decode('utf-8'))
-        ## TODO os.system('luakit %s' % msg.payload)
-    if msg.topic == 'user/boarding':
-        last_change = datetime.now()
-        try:
-            data = json.loads(msg.payload)
-            webview.load_ur('https://c-beam.cbrp3.c-base.org/welcome/%s' % data['user'])
-        except:
-            pass
-    else:
-        print(msg.payload)
+    url = msg.payload.decode('utf-8')
+    log.debug("Received message, opening %s" % url)    
+    last_change = datetime.now()
+    webview.load_url(url)
 
 
 def run_webview_window():
+    # Will block here until window is closed.
     webview.create_window("It works, Jim!", "http://c-beam.cbrp3.c-base.org/he1display", fullscreen=True)
+    sys.exit(0)
 
 
 def signal_handler(signal, frame):
     print('You pressed Ctrl+C!')
     webview.destroy_window()
     sys.exit(0)
+    
+    
+def main():
+    # Set up logging in a autorotation logfile in the same directory as this file.
+    logfilename = os.path.realpath(os.path.join(os.path.dirname(__file__), 'debug.log'))
+    handler = RotatingFileHandler(logfilename, maxBytes=5242880, backupCount=5) 
+    format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    handler.setFormatter(format)
+    log.addHandler(handler)
+    ch = logging.StreamHandler(sys.stdout)
+    ch.setFormatter(format)
+    log.addHandler(ch)
+    # use this to change the log-level
+    log.setLevel(logging.DEBUG)
+    
+    # Set up the signal handler für Ctrl+C
+    signal.signal(signal.SIGINT, signal_handler)
 
-
-signal.signal(signal.SIGINT, signal_handler)
-
-Thread(target=run_webview_window).start()
-print('Press Ctrl+C to exit')
-mqtt_loop()
+    # Start the thread
+    Thread(target=run_webview_window).start()
+    mqtt_loop()
+    
+    print('Press Ctrl+C to exit')
+    # Go and listen to mqtt.
+        
+if __name__ == '__main__':
+    main()
