@@ -20,6 +20,8 @@ from config import important_urls
 from config import mqtt_client_id
 from config import mqtt_client_name
 from config import mqtt_client_password
+from config import discovery_message
+
 import config
 mqtt_server = "c-beam.cbrp3.c-base.org"
 page_timeout = 120
@@ -54,13 +56,18 @@ def mqtt_connect(client):
     except Exception as e: 
         log.debug(e)
 
-
 def mqtt_loop():
+    time.sleep(2.0)
+    log.info("Starting MQTT loop ...")
+    # Set up the signal handler für Ctrl+C
+    
+    
     global last_change
-    time.sleep(5.0)
+    
     log.debug("MQTT loop started.")
     client = paho.Client(mqtt_client_id)
     mqtt_connect(client)
+    send_discovery_msg(client)
     while True:
         result = client.loop(1)
         if result != 0:
@@ -70,6 +77,16 @@ def mqtt_loop():
             current_cycle = next(url_list_cycle)
             open_url("%s" % next(current_cycle), client)
             last_change = datetime.now()
+
+
+def send_discovery_msg(client):
+    """
+    Send the discovery message, such that MsgFlo can automatically set up a component
+    whenever a new instance of this program is run.
+    
+    Details, see: https://github.com/c-base/mqttwebview/issues/2
+    """
+    client.publish('fbp', payload=json.dumps(discovery_message).encode('utf-8'), qos=0)
 
 
 def on_message(client, obj, msg):
@@ -95,8 +112,7 @@ def open_url(url, client):
 def run_webview_window():
     # Will block here until window is closed.
     current_cycle = next(url_list_cycle)
-    webview.create_window("It works, Jim!", next(current_cycle), fullscreen=True)
-    sys.exit(1)
+    webview.create_window("It works, Jim!", next(current_cycle), fullscreen=False)
 
 
 def signal_handler(signal, frame):
@@ -117,13 +133,14 @@ def main():
     log.addHandler(ch)
     # use this to change the log-level
     log.setLevel(logging.DEBUG)
-    
-    # Set up the signal handler für Ctrl+C
     signal.signal(signal.SIGINT, signal_handler)
-
+    
     # Start the thread
-    Thread(target=run_webview_window).start()
-    mqtt_loop()
+    t2 = Thread(target=mqtt_loop)
+    t2.start()
+    #t1 = Thread(target=run_webview_window)
+    run_webview_window()
+    
     
     print('Press Ctrl+C to exit')
     # Go and listen to mqtt.

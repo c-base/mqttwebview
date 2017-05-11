@@ -32,3 +32,32 @@ mqtt_server_tls = False
 #mqtt_server_cert = "/etc/ssl/certs/c-beam-mqtt.crt"
 #mqtt_server_cert = "/etc/ssl/certs/c-beam-ext.c-base.org.pem"
 mqtt_server_cert = "/etc/ssl/certs/root.crt"
+
+
+discovery_message = {
+  "command": "participant",
+  "protocol": "discovery",
+  "payload": {
+    "component": "c-base/mqttwebview",
+    "label": "Show URL on a public screen.",
+    "inports": [
+        {
+            "queue": "%s/open" % mqtt_client_name,
+            "type": "string",
+            "description": "URL to be opened",
+            "id": "open",
+        }
+    ],
+    "outports": [
+        {
+            "queue": "%s/opened" % mqtt_client_name,
+            "type": "object",
+            "description": "The URL that has been opened and is showing.",
+            "id": "opened",
+        }
+    ],
+    "role": "%s" % mqtt_client_name,
+    "id": "mqttwebview%d" % getnode(),
+    "icon": "tint"
+  }
+}
