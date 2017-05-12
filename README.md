@@ -1,5 +1,6 @@
-#
-heavily based on http://github.com/c-base/mqttluakit
+# A MQTT-connected 
+
+- heavily based on http://github.com/c-base/mqttluakit
 
 ## How to install
 
@@ -10,11 +11,9 @@ pip3 install --user pywebview paho-mqtt validators
 
 ## How to run
 
-Clone git repo
-
-goto cloned dir
-
-run run_mqtt
+- Clone git repo: `http://github.com/c-base/mqttwebview.git`
+- cd into the freshly cloned directory
+- ./run_mqttwebview.sh
 
 ## Run automatically at boot time with no X11 cursor
 
