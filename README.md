@@ -1,17 +1,20 @@
-# A MQTT-connected 
+# A MQTT-connected web view
 
-- heavily based on http://github.com/c-base/mqttluakit
+- heavily based on https://github.com/c-base/mqttluakit/
 
 ## How to install
+
+- Install the dependencies like this:
 
 ```
 sudo apt install python3-gi gir1.2-webkit-3.0
 pip3 install --user pywebview paho-mqtt validators
 ```
 
+- Then clone the git repo: `https://github.com/c-base/mqttwebview.git`
+
 ## How to run
 
-- Clone git repo: `http://github.com/c-base/mqttwebview.git`
 - cd into the freshly cloned directory
 - ./run_mqttwebview.sh
 
