@@ -117,7 +117,7 @@ def open_url(url, client):
 def run_webview_window():
     # Will block here until window is closed.
     current_cycle = next(url_list_cycle)
-    webview.create_window("It works, Jim!", next(current_cycle), fullscreen=False)
+    webview.create_window("mqttwebview", next(current_cycle), fullscreen=False)
 
 
 def signal_handler(signal, frame):
