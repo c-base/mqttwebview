@@ -24,7 +24,7 @@ Set i3 as the default window manage (session) in lightdm.
 
 Add the following line to `/home/$USER/.i3/config`:
 ```
-exec /home/siri/mqttwebview/run_mqttwebview.sh
+exec /home/$USER/mqttwebview/run_mqttwebview.sh
 ```
 
 ## Hwith no X11 cursor
