@@ -16,16 +16,16 @@ pip3 install --user pywebview paho-mqtt validators
 ## How to run
 
 - cd into the freshly cloned directory
-- ./run_mqttwebview.sh
+- Run the program with `./run_mqttwebview.sh`
 
 ## Run automatically at boot time with no X11 cursor
 
-in /etc/lightdm/lightdm.conf change
+in `/etc/lightdm/lightdm.conf` change the line
 
+```
 xserver-command=X
-
-to 
-
+```
+into this: 
+```
 xserver-command=X -nocursor -s 0 dpms
-
-
+```
