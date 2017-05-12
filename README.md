@@ -27,7 +27,7 @@ Add the following line to `/home/$USER/.i3/config`:
 exec /home/$USER/mqttwebview/run_mqttwebview.sh
 ```
 
-## Hwith no X11 cursor
+## How to run X11 without mouse cursor
 
 in `/etc/lightdm/lightdm.conf` change the line
 ```
