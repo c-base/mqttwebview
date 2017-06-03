@@ -1,3 +1,5 @@
+from uuid import getnode
+
 important_urls = [
     "http://c-beam.cbrp3.c-base.org/he1display",
 ]
