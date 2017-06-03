@@ -3,7 +3,6 @@
 import signal
 import os
 import sys
-import webview
 import time
 import logging
 import json
@@ -11,6 +10,7 @@ import paho.mqtt.client as paho
 import validators
 from itertools import cycle
 from threading import Thread
+import queue
 from datetime import datetime
 from datetime import timedelta
 from logging.handlers import RotatingFileHandler
@@ -23,6 +23,12 @@ from config import mqtt_client_password
 from config import discovery_message
 
 import config
+
+
+from webscreensaver import WebScreensaver
+from webhacks import WebHacks
+from webscreensaver import Gtk
+
 mqtt_server = "c-beam.cbrp3.c-base.org"
 page_timeout = 120
 
@@ -34,6 +40,8 @@ log = logging.getLogger(__name__)
 important_cycle = cycle(important_urls)
 urls_cycle = cycle(urls)
 
+main_queue = queue.Queue()
+
 # A cycle of cycles. Every <page_timeout> minutes the screen will show the next url from the cycle.
 # With a configuration like this
 #       important_urls = ['c-base.org']
@@ -43,6 +51,8 @@ urls_cycle = cycle(urls)
 #.      ['google.com', 'c-base.org', 'bing.com', 'c-base.org', 'google.com', ...]
 url_list_cycle = cycle([important_cycle, urls_cycle])
 
+started = False
+stopped = False
 
 def mqtt_connect(client):
     try:
@@ -57,8 +67,9 @@ def mqtt_connect(client):
     except Exception as e: 
         log.debug(e)
 
-def mqtt_loop():
+def mqtt_loop(saver=None):
     global last_change
+    global stopped
 
     time.sleep(2.0)
     log.info("Starting MQTT loop ...")
@@ -67,7 +78,7 @@ def mqtt_loop():
     log.debug("MQTT loop started.")
     client = paho.Client(mqtt_client_id)
     mqtt_connect(client)
-    while True:
+    while stopped == False:
         send_discovery_msg(client)
         result = client.loop(1)
         if result != 0:
@@ -110,7 +121,11 @@ def on_message(client, obj, msg):
 
 
 def open_url(url, client):
-    webview.load_url(url)
+    global started
+    global main_queue
+    if started == True:
+        Gtk.main_quit()
+    main_queue.put(url)
     client.publish('%s/opened' % mqtt_client_name, url)
 	
 
@@ -149,6 +164,65 @@ def main():
     
     print('Press Ctrl+C to exit')
     # Go and listen to mqtt.
-        
-if __name__ == '__main__':
     main()
+
+
+def setup_logging():
+    root = logging.getLogger()
+    root.setLevel(logging.DEBUG)
+
+    ch = logging.StreamHandler(sys.stdout)
+    ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    ch.setFormatter(formatter)
+    root.addHandler(ch)
+
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description='MQTTWebView: Run a web page as screensaver controlled via MQTT')
+    parser.add_argument('-window-id', help='XID of Window to draw on')
+    parser.add_argument('-url', help='URL of page to display')
+    parser.add_argument('-choose', help='Select a favourite')
+    parser.add_argument('-list', action='store_true', help='List favourites')
+    parser.add_argument('-cookie-file', metavar='PATH', help='Store cookies in PATH')
+    args = parser.parse_args()
+    
+    if args.list:
+	    WebHacks.print_list()
+	    sys.exit(0)
+
+    setup_logging()
+    url, scripts = None, None
+    wh = WebHacks()
+    if args.url:
+	    url = args.url
+    else:
+	    hack = wh.determine_screensaver(args.choose)
+	    url, scripts = hack.url, hack.scripts
+
+    t2 = Thread(target=mqtt_loop)
+    t2.start()
+
+    #def doit(url):
+
+    while True:
+        item = main_queue.get()
+        log.info("queue")
+        if item is None:
+            break
+        saver = WebScreensaver(
+            url=url,
+            window_id=WebScreensaver.determine_window_id(args.window_id),
+            scripts=scripts,
+            cookie_file=args.cookie_file,
+        )
+        saver.setup()
+        #t = Thread(target=doit, args=[item])
+        log.info("Starting %s" % item)
+        started = True
+        main_queue.task_done()
+        Gtk.main()
+        # t.start()
+
+    stopped = True
