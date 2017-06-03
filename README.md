@@ -1,29 +1,39 @@
-#
-heavily based on http://github.com/c-base/mqttluakit
+# A MQTT-connected web view
+
+- heavily based on https://github.com/c-base/mqttluakit/
 
 ## How to install
 
-sudo apt install python3-gi gir1.2-webkit-3.0
-pip3 install --user pywebview
-pip3 install --user paho-mqtt
-pip3 install --user validators
+- Install the dependencies like this:
+
+```
+sudo apt install python3-gi gir1.2-webkit-3.0 libwebkitgtk-3.0-dev
+pip3 install --user pywebview paho-mqtt validators
+```
+
+- Then clone the git repo: `https://github.com/c-base/mqttwebview.git`
 
 ## How to run
 
-Clone git repo
+- cd into the freshly cloned directory
+- Run the program with `./run_mqttwebview.sh`
 
-goto cloned dir
+## Run automatically at boot time
 
-run run_mqtt
+Set i3 as the default window manage (session) in lightdm.
 
-## Run automatically at boot time with no X11 cursor
+Add the following line to `/home/$USER/.i3/config`:
+```
+exec /home/$USER/mqttwebview/run_mqttwebview.sh
+```
 
-in /etc/lightdm/lightdm.conf change
+## How to run X11 without mouse cursor and also disable display sleep
 
+in `/etc/lightdm/lightdm.conf` change the line
+```
 xserver-command=X
-
-to 
-
+```
+into this: 
+```
 xserver-command=X -nocursor -s 0 dpms
-
-
+```

@@ -35,7 +35,6 @@ mqtt_server_tls = False
 #mqtt_server_cert = "/etc/ssl/certs/c-beam-ext.c-base.org.pem"
 mqtt_server_cert = "/etc/ssl/certs/root.crt"
 
-
 discovery_message = {
   "command": "participant",
   "protocol": "discovery",
@@ -59,7 +58,7 @@ discovery_message = {
         }
     ],
     "role": "%s" % mqtt_client_name,
-    "id": "mqttwebview%d" % getnode(),
-    "icon": "tint"
+    "id": mqtt_client_id,
+    "icon": "television"
   }
 }

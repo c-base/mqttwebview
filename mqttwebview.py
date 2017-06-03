@@ -26,7 +26,8 @@ import config
 mqtt_server = "c-beam.cbrp3.c-base.org"
 page_timeout = 120
 
-last_change = datetime.now()
+last_change = datetime.now() 
+last_discovery = datetime.now() - timedelta(seconds=60) # minus 60s so it fires on the first time
 
 log = logging.getLogger(__name__)
 
@@ -57,18 +58,17 @@ def mqtt_connect(client):
         log.debug(e)
 
 def mqtt_loop():
+    global last_change
+
     time.sleep(2.0)
     log.info("Starting MQTT loop ...")
     # Set up the signal handler für Ctrl+C
     
-    
-    global last_change
-    
     log.debug("MQTT loop started.")
     client = paho.Client(mqtt_client_id)
     mqtt_connect(client)
-    send_discovery_msg(client)
     while True:
+        send_discovery_msg(client)
         result = client.loop(1)
         if result != 0:
             mqtt_connect(client)
@@ -86,7 +86,12 @@ def send_discovery_msg(client):
     
     Details, see: https://github.com/c-base/mqttwebview/issues/2
     """
-    client.publish('fbp', payload=json.dumps(discovery_message).encode('utf-8'), qos=0)
+    global last_discovery
+    passed = datetime.now() - last_discovery
+    if passed.seconds > 59:
+        log.debug("Sending discovery message ...")
+        client.publish('fbp', payload=json.dumps(discovery_message).encode('utf-8'), qos=0)
+        last_discovery = datetime.now()
 
 
 def on_message(client, obj, msg):
@@ -112,7 +117,7 @@ def open_url(url, client):
 def run_webview_window():
     # Will block here until window is closed.
     current_cycle = next(url_list_cycle)
-    webview.create_window("It works, Jim!", next(current_cycle), fullscreen=False)
+    webview.create_window("mqttwebview", next(current_cycle), fullscreen=False)
 
 
 def signal_handler(signal, frame):
