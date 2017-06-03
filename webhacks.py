@@ -45,6 +45,10 @@ class WebHacks(object):
     '''
     
     default_hacks = [
+        Hack('he1display',
+            url='https://c-beam.cbrp3.c-base.org/he1display',
+            scripts=[]
+        ),
         Hack('starfield',
             url='http://www.chiptune.com/starfield/starfield.html',
             scripts=[ UserScripts.remove_tags("iframe") ]
