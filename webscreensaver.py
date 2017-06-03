@@ -15,7 +15,7 @@ gi.require_version('Gtk', '3.0')
 gi.require_version('GdkX11', '3.0')
 gi.require_version('WebKit', '3.0')
 gi.require_version('Soup', '2.4')
-from gi.repository import Gtk, Gdk, GdkX11, GObject, Soup, WebKit
+from gi.repository import GLib, Gtk, Gdk, GdkX11, GObject, Soup, WebKit
 
 
 class WebScreensaver(object):
@@ -124,7 +124,11 @@ class WebScreensaver(object):
         self.win.show_all()
         Gdk.Window.process_all_updates()
 
-        self.browser.open(self.url)
+        #self.browser.open(self.url)
+        self.open(self.url)
+
+    def open(self, url):
+        self.browser.open(url)
 
     @classmethod
     def determine_window_id(cls, win_id=None):
@@ -136,8 +140,6 @@ class WebScreensaver(object):
             win_id = int(win_id, 16)
 
         return win_id
-
-
 
 
 if __name__ == "__main__":
