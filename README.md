@@ -8,7 +8,7 @@
 
 ```
 sudo apt install python3-gi gir1.2-webkit-3.0 libwebkitgtk-3.0-dev i3 
-pip3 install --user pywebview paho-mqtt validators config
+pip3 install --user pywebview paho-mqtt validators
 ```
 
 - Then clone the git repo: `https://github.com/c-base/mqttwebview.git`
