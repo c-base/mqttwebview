@@ -7,8 +7,9 @@
 - Install the dependencies like this:
 
 ```
-sudo apt install python3-gi gir1.2-webkit-3.0 libwebkitgtk-3.0-dev
+sudo apt install python3-pip libwebkitgtk-3.0-dev
 libwebkitgtk-3.0-dev
+ python3-gi gir1.2-webkit-3.0
 pip3 install --user pywebview paho-mqtt validators
 ```
 
