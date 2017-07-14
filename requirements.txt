@@ -1,0 +1,3 @@
+pywebview
+paho-mqtt
+validators
